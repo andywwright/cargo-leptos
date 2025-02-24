@@ -3,6 +3,7 @@ use actix_files::Files;
 use actix_web::*;
 use leptos::*;
 use leptos_actix::{generate_route_list, LeptosRoutes};
+use log::warn;
 
 pub async fn run() -> std::io::Result<()> {
     _ = dotenvy::dotenv();

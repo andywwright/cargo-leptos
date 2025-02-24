@@ -49,6 +49,7 @@ pub struct Project {
     pub server_fn_prefix: Option<String>,
     pub disable_server_fn_hash: bool,
     pub server_fn_mod_path: bool,
+    pub no_frontend: bool,
 }
 
 impl Debug for Project {
@@ -63,6 +64,7 @@ impl Debug for Project {
             .field("precompress", &self.precompress)
             .field("js_minify", &self.js_minify)
             .field("hot_reload", &self.hot_reload)
+            .field("no_frontend", &self.no_frontend)
             .field("site", &self.site)
             .field("end2end", &self.end2end)
             .field("assets", &self.assets)
@@ -134,6 +136,7 @@ impl Project {
                 server_fn_prefix: config.server_fn_prefix,
                 disable_server_fn_hash: config.disable_server_fn_hash,
                 server_fn_mod_path: config.server_fn_mod_path,
+                no_frontend: cli.no_frontend,
             };
             resolved.push(Arc::new(proj));
         }

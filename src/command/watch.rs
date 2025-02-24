@@ -24,6 +24,10 @@ pub async fn watch(proj: &Arc<Project>) -> Result<()> {
         log::warn!("warning: Hot reloading does not currently work in --release mode.");
     }
 
+    if proj.no_frontend {
+        log::warn!("warning: Frontend and static assets will not be watched");
+    }
+
     let view_macros = if proj.hot_reload {
         // build initial set of view macros for patching
         let view_macros = ViewMacros::new();
@@ -69,15 +73,20 @@ pub async fn run_loop(proj: &Arc<Project>) -> Result<()> {
 
 pub async fn runner(proj: &Arc<Project>) -> Result<()> {
     let changes = Interrupt::get_source_changes().await;
-
     let server_hdl = compile::server(proj, &changes).await;
-    let front_hdl = compile::front(proj, &changes).await;
-    let assets_hdl = compile::assets(proj, &changes).await;
     let style_hdl = compile::style(proj, &changes).await;
 
-    let (server, front, assets, style) = try_join!(server_hdl, front_hdl, assets_hdl, style_hdl)?;
-
-    let outcomes = vec![server?, front?, assets?, style?];
+    let outcomes = if proj.no_frontend {
+        let (server, style) = try_join!(server_hdl, style_hdl)?;
+        vec![server?, style?]
+    } else {
+        let front_hdl = compile::front(proj, &changes).await;
+        let assets_hdl = compile::assets(proj, &changes).await;
+        
+        let (server, front, assets, style) =
+            try_join!(server_hdl, front_hdl, assets_hdl, style_hdl)?;
+        vec![server?, front?, assets?, style?]
+    };
 
     let interrupted = outcomes.iter().any(|outcome| *outcome == Outcome::Stopped);
     if interrupted {
